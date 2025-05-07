@@ -76,6 +76,7 @@ const AbsensiCamera: React.FC = () => {
                 Alert.alert('Gagal', 'Foto tidak ada.', [{ text: 'OK', onPress: () => navigation.goBack() }]);
                 return;
             }
+
             const res = status === 'checkin' ? await createAbsenMasuk({
                 image: {
                     uri: photo.path,
@@ -84,6 +85,7 @@ const AbsensiCamera: React.FC = () => {
                 },
                 pin: `${userData.pin_absen}`,
                 coordinate: JSON.stringify(position),
+                scan_date: moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
             }) : await createAbsenKeluar({
                 image: {
                     uri: photo.path,
@@ -92,12 +94,13 @@ const AbsensiCamera: React.FC = () => {
                 },
                 pin: `${userData.pin_absen}`,
                 coordinate: JSON.stringify(position),
+                scan_date: moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
             });
             const message = status === 'checkin' ? 'masuk' : 'keluar';
             if (res.status === 'success') {
                 Alert.alert('Sukses', `Berhasil absen ${message}.`, [{ text: 'OK', onPress: () => navigation.goBack() }]);
             } else {
-                Alert.alert('Gagal', `Absen ${message} tidak berhasil.`, [{ text: 'OK', onPress: () => navigation.goBack() }]);
+                Alert.alert('Gagal', `Absen ${message} tidak berhasil. ${res.message}`, [{ text: 'OK', onPress: () => navigation.goBack() }]);
             }
         } catch {
             Alert.alert('Gagal', `Absen ${status === 'checkin' ? 'masuk' : 'keluar'} tidak berhasil`, [{ text: 'OK' }]);
@@ -201,6 +204,7 @@ const styles = StyleSheet.create({
     },
     statusIndicator: {
         padding: spacing.md,
+        margin: 25,
         alignSelf: 'center',
         backgroundColor: 'rgba(0,0,0,0.5)',
         borderRadius: radius.round,
@@ -217,6 +221,7 @@ const styles = StyleSheet.create({
     },
     buttonRow: {
         flexDirection: 'row',
+        marginBottom: 40,
         justifyContent: 'space-between',
         paddingHorizontal: spacing.xl,
     },
@@ -238,7 +243,7 @@ const styles = StyleSheet.create({
     },
     cameraContainer: {
         flex: 1,
-        padding: spacing.md,
+        padding: spacing.xxxl + 10,
         justifyContent: 'space-between',
     },
     statusIndicatorCamera: {

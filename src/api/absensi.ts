@@ -1,6 +1,7 @@
 import z, { date } from 'zod'
 import api from "../services/api"
 import { absenCheckInSchema, absenCheckOutSchema } from '../schema/absensiSchema';
+import moment from 'moment';
 
 export const getAbsensiByPin = async (pin: number) => {
     try {
@@ -48,6 +49,7 @@ export const createAbsenMasuk = async (data: z.infer<typeof absenCheckInSchema>)
     formdata.append('pin', validatedData.pin);
     formdata.append('coordinate', JSON.stringify(validatedData.coordinate));
     formdata.append('image', validatedData.image);
+    formdata.append('scan_date', validatedData.scan_date);
 
     try {
         const res = await api.post(`/absensi/masuk`, formdata, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -58,12 +60,48 @@ export const createAbsenMasuk = async (data: z.infer<typeof absenCheckInSchema>)
             return { status: res.data.status, message: res.data.message };
         }
     } catch (error: any) {
-        return { status: "fail", message: "Terjadi kesalahan internal", error };
+        if (error.response && error.response.data) {
+            const errorData = error.response.data;
+            console.log("Backend Error Response:", errorData);
+
+            // Return dengan struktur yang konsisten
+            return {
+                status: errorData.status || 'fail',
+                message: errorData.message,
+                error: {
+                    statusCode: errorData.error?.statusCode || errorData.statusCode,
+                    errorCode: errorData.error?.errorCode || errorData.errorCode,
+
+                },
+            };
+        }
+        // Handle network error
+        else if (error.request) {
+            return {
+                status: "fail",
+                message: "Tidak dapat terhubung ke server. Periksa koneksi internet anda.",
+                error: {
+                    statusCode: 500,
+                    errorCode: 'NETWORK_ERROR',
+                },
+            };
+        }
+        // Handle other errors
+        else {
+            return {
+                status: "fail",
+                message: error.message || "Terjadi kesalahan",
+                error: {
+                    statusCode: 500,
+                    errorCode: 'UNKNOWN_ERROR',
+                },
+            };
+        }
     }
 }
 
 export const createAbsenKeluar = async (data: z.infer<typeof absenCheckOutSchema>) => {
-    const validationResult = absenCheckInSchema.safeParse(data);
+    const validationResult = absenCheckOutSchema.safeParse(data);
 
     if (!validationResult.success) {
         console.error("Kesalahan Validasi Zod:", validationResult.error.flatten().fieldErrors);
@@ -76,6 +114,7 @@ export const createAbsenKeluar = async (data: z.infer<typeof absenCheckOutSchema
     formdata.append('pin', validatedData.pin);
     formdata.append('coordinate', JSON.stringify(validatedData.coordinate));
     formdata.append('image', validatedData.image);
+    formdata.append('scan_date', validatedData.scan_date);
 
     try {
         const res = await api.post(`/absensi/keluar`, formdata, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -86,6 +125,42 @@ export const createAbsenKeluar = async (data: z.infer<typeof absenCheckOutSchema
             return { status: res.data.status, message: res.data.message };
         }
     } catch (error: any) {
-        return { status: "fail", message: "Terjadi kesalahan internal", error };
+        if (error.response && error.response.data) {
+            const errorData = error.response.data;
+            console.log("Backend Error Response:", errorData);
+
+            // Return dengan struktur yang konsisten
+            return {
+                status: errorData.status || 'fail',
+                message: errorData.message,
+                error: {
+                    statusCode: errorData.error?.statusCode || errorData.statusCode,
+                    errorCode: errorData.error?.errorCode || errorData.errorCode,
+
+                },
+            };
+        }
+        // Handle network error
+        else if (error.request) {
+            return {
+                status: "fail",
+                message: "Tidak dapat terhubung ke server. Periksa koneksi internet anda.",
+                error: {
+                    statusCode: 500,
+                    errorCode: 'NETWORK_ERROR',
+                },
+            };
+        }
+        // Handle other errors
+        else {
+            return {
+                status: "fail",
+                message: error.message || "Terjadi kesalahan",
+                error: {
+                    statusCode: 500,
+                    errorCode: 'UNKNOWN_ERROR',
+                },
+            };
+        }
     }
 }

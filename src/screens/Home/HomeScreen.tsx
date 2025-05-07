@@ -38,23 +38,23 @@ const HomeScreen: React.FC = () => {
         image: item.image,
     }));
 
-    // const fetchApi = async () => {
-    //     try {
-    //         const [ulangTahun] = await Promise.all([
-    //             getKaryawanUlangTahun(userData.pt)
-    //         ]);
+    const fetchApi = async () => {
+        try {
+            const [ulangTahun] = await Promise.all([
+                getKaryawanUlangTahun(userData.pt)
+            ]);
 
-    //         if (ulangTahun.status === 'success') {
-    //             setUlangTahun(ulangTahun.data);
-    //         }
-    //     } catch (error) {
-    //         console.log('fetchApi Error [HomeScreen]:', error);
-    //     }
-    // }
+            if (ulangTahun.status === 'success') {
+                setUlangTahun(ulangTahun.data);
+            }
+        } catch (error) {
+            console.log('fetchApi Error [HomeScreen]:', error);
+        }
+    }
 
-    // useEffect(() => {
-    //     fetchApi();
-    // }, [])
+    useEffect(() => {
+        fetchApi();
+    }, [])
 
     return (
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>

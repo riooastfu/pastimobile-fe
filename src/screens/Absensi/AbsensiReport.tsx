@@ -20,34 +20,13 @@ import {
     fontSizes,
     radius,
 } from '../../utils/responsive';
+import Skeleton from '../../components/skeleton';
 
 interface AbsenItemRenderProps {
     tgl_masuk: string;
     jam_masuk: string;
     jam_pulang: string;
 }
-
-const SkeletonItem = () => (
-    <View style={styles.skeletonItemContainer}>
-        <View style={styles.skeletonLeft}>
-            <View style={styles.skeletonRow}>
-                <View style={[styles.skeletonBlock, styles.skeletonIcon]} />
-                <View style={[styles.skeletonBlock, styles.skeletonDate]} />
-            </View>
-            <View style={styles.skeletonRow}>
-                <View style={styles.skeletonColumn}>
-                    <View style={[styles.skeletonBlock, styles.skeletonLabel]} />
-                    <View style={[styles.skeletonBlock, styles.skeletonLabel, { marginTop: 5 }]} />
-                </View>
-                <View style={styles.skeletonColumn}>
-                    <View style={[styles.skeletonBlock, styles.skeletonTime]} />
-                    <View style={[styles.skeletonBlock, styles.skeletonTime, { marginTop: 5 }]} />
-                </View>
-            </View>
-        </View>
-        <View style={[styles.skeletonBlock, styles.skeletonStatus]} />
-    </View>
-);
 
 const AbsensiReport = () => {
     const { userData } = useAuth();
@@ -91,14 +70,16 @@ const AbsensiReport = () => {
                 Alert.alert('Gagal mendapatkan data absensi', absensiResponse.message);
                 setAbsensi([]);
             }
+            setIsLoading(false);
+            setIsRefresh(false);
         } catch (error: any) {
             Alert.alert('Peringatan', `Terjadi kesalahan saat mendapatkan data absensi! ${error.message || ''}`);
             setAbsensi([]);
-        } finally {
             setIsLoading(false);
             setIsRefresh(false);
         }
     }, [userData.pin_absen, isRefresh]);
+
 
     const onRefresh = useCallback(async () => {
         setIsRefresh(true);
@@ -114,7 +95,31 @@ const AbsensiReport = () => {
             return (
                 <FlatList
                     data={[1, 2, 3, 4, 5]}
-                    renderItem={SkeletonItem}
+                    renderItem={
+                        () => (
+                            <View style={styles.itemContainer}>
+                                <View style={{ rowGap: spacing.sm }}>
+                                    <View style={{ flexDirection: 'row', columnGap: spacing.sm, alignItems: 'center' }}>
+                                        <Skeleton width={responsiveWidth(5)} height={responsiveWidth(5)} style={{ alignSelf: 'center', marginBottom: 12 }} />
+                                        <Skeleton width={responsiveWidth(25)} height={responsiveWidth(5)} style={{ alignSelf: 'center', marginBottom: 12 }} />
+                                    </View>
+                                    <View style={{ flexDirection: 'row' }}>
+                                        <View>
+                                            <Skeleton width={responsiveWidth(12)} height={responsiveWidth(5)} style={{ alignSelf: 'center', marginBottom: 12 }} />
+                                            <Skeleton width={responsiveWidth(12)} height={responsiveWidth(5)} style={{ alignSelf: 'center', marginBottom: 12 }} />
+                                        </View>
+                                        <View style={{ marginLeft: spacing.sm }}>
+                                            <Skeleton width={responsiveWidth(15)} height={responsiveWidth(5)} style={{ alignSelf: 'center', marginBottom: 12 }} />
+                                            <Skeleton width={responsiveWidth(15)} height={responsiveWidth(5)} style={{ alignSelf: 'center', marginBottom: 12 }} />
+                                        </View>
+                                    </View>
+                                </View>
+                                <View>
+                                    <Skeleton width={responsiveWidth(20)} height={responsiveWidth(5)} style={{ alignSelf: 'center', marginBottom: 12 }} />
+                                </View>
+                            </View>
+                        )
+                    }
                     keyExtractor={item => `skeleton-${item}`}
                     showsVerticalScrollIndicator={false}
                 />
@@ -163,54 +168,6 @@ const styles = StyleSheet.create({
         borderRadius: radius.sm,
         borderColor: '#E0E0E0',
         backgroundColor: '#fff',
-    },
-    skeletonItemContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginVertical: spacing.sm,
-        padding: spacing.md,
-        borderWidth: 0.5,
-        borderRadius: radius.sm,
-        borderColor: '#E0E0E0',
-        backgroundColor: '#fff',
-    },
-    skeletonLeft: {
-        rowGap: spacing.md,
-        flex: 1,
-        marginRight: spacing.md,
-    },
-    skeletonRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    skeletonColumn: {
-        marginRight: spacing.sm,
-    },
-    skeletonBlock: {
-        backgroundColor: '#E0E0E0',
-        borderRadius: radius.sm,
-    },
-    skeletonIcon: {
-        width: responsiveWidth(5),
-        height: responsiveWidth(5),
-        marginRight: spacing.sm,
-    },
-    skeletonDate: {
-        height: responsiveWidth(4),
-        width: '70%',
-    },
-    skeletonLabel: {
-        height: responsiveWidth(3.5),
-        width: responsiveWidth(12),
-    },
-    skeletonTime: {
-        height: responsiveWidth(3.5),
-        width: responsiveWidth(15),
-    },
-    skeletonStatus: {
-        height: responsiveWidth(4),
-        width: responsiveWidth(18),
     },
     emptyContainer: {
         flex: 1,

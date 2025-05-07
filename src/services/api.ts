@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import { getAccessToken, getRefreshToken, removeTokens, storeTokens } from "../utils/tokenStorage";
+import { baseurl } from "../helpers/baseurl";
 
 // Flag to prevent multiple refresh attempts at once
 let isRefreshing = false;
@@ -18,7 +19,7 @@ const onRefreshed = (token: string) => {
 };
 
 const api: AxiosInstance = axios.create({
-    baseURL: 'http://10.131.7.240:8080/api/v1',
+    baseURL: baseurl,
     timeout: 10000, // Adding a reasonable timeout
 });
 
@@ -79,7 +80,7 @@ api.interceptors.response.use(
 
                 // Try to get a new access token
                 const response = await axios.post(
-                    `http://10.131.7.240:8080/api/v1/auth/refresh-token`,
+                    `${baseurl}/auth/refresh-token`,
                     { refreshToken },
                     { headers: { 'Content-Type': 'application/json' } }
                 );

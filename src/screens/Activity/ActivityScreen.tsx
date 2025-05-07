@@ -10,8 +10,11 @@ import { useAuth } from '../../providers/AuthProviders';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../types';
 import { deleteLaporanKesehatanById, getLaporanKesehatanByNik, getLaporanKesehatanByTanggal } from '../../api/aktivitas';
+import ActivityScreenSkeleton from '../../components/Aktivitas/aktivitasScreen-skeleton';
+import Skeleton from '../../components/skeleton';
+import { responsiveHeight, responsiveWidth } from '../../utils/responsive';
 
-type LaporanKesehatan = {
+interface LaporanKesehatan {
     id_laporan: string;
     tanggal: Date;
     jam_masuk: number;
@@ -108,11 +111,11 @@ const ActivityScreen = () => {
             } else {
                 Alert.alert('Error', res.message);
             }
+            setIsLoading(false);
         } catch (error) {
             console.error('Error fetching data:', error);
             Alert.alert('Error', 'Terjadi kesalahan internal. Silakan coba lagi.');
         }
-        setIsLoading(false);
     }
 
     const renderItem = ({ item }: { item: LaporanKesehatan }) => {
@@ -147,13 +150,6 @@ const ActivityScreen = () => {
 
     return (
         <View style={{ flex: 1, backgroundColor: '#fafafa', rowGap: 10 }}>
-            {isLoading &&
-                <View style={{ flex: 1, position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                    <View style={{ width: wp('20%'), height: wp('20%'), backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', opacity: 0.5, borderRadius: wp('2%') }}>
-                        <ActivityIndicator size={'large'} />
-                    </View>
-                </View>
-            }
             <View style={{ padding: 15, backgroundColor: '#fff', rowGap: 5 }}>
                 {/* <View style={{ paddingHorizontal: 40 }}>
                     <Text style={{ fontWeight: 'bold', fontSize: wp('3%') }}>Cari by tanggal</Text>
@@ -185,33 +181,44 @@ const ActivityScreen = () => {
                 </View>
             </View>
 
-            <SafeAreaView style={{ backgroundColor: '#fff', padding: 15, rowGap: 15 }}>
-                <TouchableOpacity onPress={() => navigation.navigate('ActivityTambah')} style={{ alignSelf: 'flex-end', flexDirection: 'row', alignItems: 'center', columnGap: 5 }}>
-                    <Icon name='pluscircle' size={wp('4%')} color='#56C58D' />
-                    <Text style={{ color: '#56C58D' }}>Aktivitas</Text>
-                </TouchableOpacity>
-                {
-                    laporanKesehatan.length !== 0 ?
-                        <FlatList
-                            data={laporanKesehatan}
-                            renderItem={renderItem}
-                            keyExtractor={item => item.id_laporan}
-                            extraData={selectedId}
-                            showsVerticalScrollIndicator={false}
-                            contentContainerStyle={{ paddingBottom: 120 }}
-                            refreshing={isRefresh}
-                            onRefresh={onRefresh}
-                        />
-                        :
-                        <View style={{ justifyContent: 'center', alignItems: 'center', rowGap: 15 }}>
-                            <Text style={{ fontSize: wp('3%'), color: '#ddd' }}>Belum ada Aktivitas.</Text>
-                            <TouchableOpacity onPress={onRefreshIcon} style={{ justifyContent: 'center', alignItems: 'center', rowGap: 5 }}>
-                                <Icon name='reload1' size={wp('5%')} color={'#ddd'} />
-                                <Text style={{ fontSize: wp('3%'), color: '#ddd' }}>Tekan untuk Reload</Text>
-                            </TouchableOpacity>
-                        </View>
-                }
-            </SafeAreaView>
+            {
+                isLoading ?
+                    <View style={{ flex: 1, backgroundColor: '#fff', padding: 15, rowGap: 15 }}>
+                        {
+                            [1, 2, 3, 4, 5].map((_, i) => (
+                                <Skeleton key={i} height={responsiveHeight(10)} style={{ alignSelf: 'center' }} />
+                            ))
+                        }
+                    </View>
+                    :
+                    <SafeAreaView style={{ backgroundColor: '#fff', padding: 15, rowGap: 15 }}>
+                        <TouchableOpacity onPress={() => navigation.navigate('ActivityTambah')} style={{ alignSelf: 'flex-end', flexDirection: 'row', alignItems: 'center', columnGap: 5 }}>
+                            <Icon name='pluscircle' size={wp('4%')} color='#56C58D' />
+                            <Text style={{ color: '#56C58D' }}>Aktivitas</Text>
+                        </TouchableOpacity>
+                        {
+                            laporanKesehatan.length !== 0 ?
+                                <FlatList
+                                    data={laporanKesehatan}
+                                    renderItem={renderItem}
+                                    keyExtractor={item => item.id_laporan}
+                                    extraData={selectedId}
+                                    showsVerticalScrollIndicator={false}
+                                    contentContainerStyle={{ paddingBottom: 120 }}
+                                    refreshing={isRefresh}
+                                    onRefresh={onRefresh}
+                                />
+                                :
+                                <View style={{ justifyContent: 'center', alignItems: 'center', rowGap: 15 }}>
+                                    <Text style={{ fontSize: wp('3%'), color: '#ddd' }}>Belum ada Aktivitas.</Text>
+                                    <TouchableOpacity onPress={onRefreshIcon} style={{ justifyContent: 'center', alignItems: 'center', rowGap: 5 }}>
+                                        <Icon name='reload1' size={wp('5%')} color={'#ddd'} />
+                                        <Text style={{ fontSize: wp('3%'), color: '#ddd' }}>Tekan untuk Reload</Text>
+                                    </TouchableOpacity>
+                                </View>
+                        }
+                    </SafeAreaView>
+            }
         </View>
     )
 }

@@ -9,8 +9,11 @@ import moment from 'moment'
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen'
 import Icon from 'react-native-vector-icons/AntDesign'
 import { Dropdown } from 'react-native-element-dropdown'
+import { getlaporanHarianById, getLaporanKesehatanById } from '../../api/aktivitas'
+import Skeleton from '../../components/skeleton'
+import { radius, responsiveHeight, responsiveWidth } from '../../utils/responsive'
 
-interface HeaderLaporan {
+interface LaporanKesehatan {
     id_laporan: string,
     tanggal: Date,
     jam_masuk: Date,
@@ -43,7 +46,7 @@ const ActivityEdit = () => {
     const route = useRoute<ActivityEditRouteProps>()
     const { userData } = useAuth();
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [headerAktivitas, setHeaderAktivitas] = useState<HeaderLaporan>();
+    const [laporanKesehatan, setLaporanKesehatan] = useState<LaporanKesehatan>();
     const [laporanHarian, setLaporanHarian] = useState<LaporanHarian[]>([]);
     const [lokasiKerja, setLokasiKerja] = useState<string>('');
     const [kategori, setKategori] = useState<string>('');
@@ -56,7 +59,7 @@ const ActivityEdit = () => {
         try {
             const res = await axios.get(`${baseurl}/lapHarianById/${route.params.id_laporan}`);
             if (res.data[0]) {
-                setHeaderAktivitas(res.data[0]);
+                setLaporanKesehatan(res.data[0]);
                 setIsLoading(false);
             }
         } catch (error) {
@@ -141,99 +144,143 @@ const ActivityEdit = () => {
         );
     };
 
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            const [laporanKesehatan, laporanHarian] = await Promise.all([
+                getLaporanKesehatanById(route.params.id_laporan),
+                getlaporanHarianById(route.params.id_laporan)
+            ])
+
+            if (laporanKesehatan.status === "success" && laporanHarian.status === "success") {
+                setLaporanKesehatan(laporanKesehatan.data);
+                setLaporanHarian(laporanHarian.data);
+                setIsLoading(false);
+            } else {
+                Alert.alert('Gagal mendapatkan data laporan kesehatan', laporanKesehatan.message);
+                setIsLoading(false);
+            }
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            Alert.alert('Error', 'Terjadi kesalahan internal. Silakan coba lagi.');
+        }
+    }
+
     useEffect(() => {
-        onGetHeaderAktivitas();
-        onGetLaporanHarian();
+        fetchData()
     }, [])
 
     return (
-        isLoading
-            ?
-            <View style={{ flex: 1, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size={'large'} />
-            </View>
-            :
-            <View style={{ flex: 1, backgroundColor: '#fafafa' }}>
-                <ScrollView contentContainerStyle={{ flexGrow: 1, rowGap: 15 }}>
-                    <View style={{ padding: 15, backgroundColor: '#fff', rowGap: 15, paddingBottom: 60 }}>
-                        <Text style={{ fontSize: wp('3%'), color: '#ccc' }}>{headerAktivitas?.id_laporan}</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', columnGap: 10 }}>
-                            <Text style={{ fontSize: wp('5%'), fontWeight: 'bold', color: '#000' }}>{headerAktivitas?.status_kerja}</Text>
-                            <Icon name='pushpino' color={'#ccc'} size={wp('5%')} style={{ transform: [{ scaleX: -1 }] }} />
-                        </View>
-                        <View style={{ rowGap: 5 }}>
-                            <Text style={{ fontSize: wp('3%'), color: '#ccc' }}>Laporan tanggal</Text>
-                            <Text style={{ fontSize: wp('3%'), color: '#000' }}>{moment(headerAktivitas?.tanggal).format('DD MM YYYY')}</Text>
-                        </View>
+        <View style={{ flex: 1, backgroundColor: '#fafafa' }}>
+            <ScrollView contentContainerStyle={{ flexGrow: 1, rowGap: 15 }}>
+                <View style={{ padding: 15, backgroundColor: '#fff', rowGap: 15, paddingBottom: 60 }}>
+                    <Text style={{ fontSize: wp('3%'), color: '#ccc' }}>{laporanKesehatan?.id_laporan}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', columnGap: 10 }}>
+                        <Text style={{ fontSize: wp('5%'), fontWeight: 'bold', color: '#000' }}>{laporanKesehatan?.status_kerja}</Text>
+                        <Icon name='pushpino' color={'#ccc'} size={wp('5%')} style={{ transform: [{ scaleX: -1 }] }} />
+                    </View>
+                    <View style={{ rowGap: 5 }}>
+                        <Text style={{ fontSize: wp('3%'), color: '#ccc' }}>Laporan tanggal</Text>
+                        <Text style={{ fontSize: wp('3%'), color: '#000' }}>{moment(laporanKesehatan?.tanggal).format('DD MM YYYY')}</Text>
+                    </View>
+                </View>
+
+                <View style={{ padding: 15, backgroundColor: '#fff', borderRadius: wp('1%'), borderWidth: wp('0.1%'), marginHorizontal: 15, borderColor: '#ddd', marginTop: -50, rowGap: 10 }}>
+                    <View style={{ rowGap: 6 }}>
+                        <Text style={{ fontWeight: 'bold', fontSize: wp('3.5%') }}>Lokasi Kerja*</Text>
+                        <TextInput
+                            style={{ height: wp('10%'), borderWidth: wp('0.1%'), borderRadius: wp('1%'), borderColor: '#ddd', paddingHorizontal: 10 }}
+                            placeholder='contoh: Head Office PAS'
+                            value={lokasiKerja}
+                            onChangeText={setLokasiKerja}
+                        />
                     </View>
 
-                    <View style={{ padding: 15, backgroundColor: '#fff', borderRadius: wp('1%'), borderWidth: wp('0.1%'), marginHorizontal: 15, borderColor: '#ddd', marginTop: -50, rowGap: 10 }}>
-                        <View style={{ rowGap: 6 }}>
-                            <Text style={{ fontWeight: 'bold', fontSize: wp('3.5%') }}>Lokasi Kerja*</Text>
-                            <TextInput
-                                style={{ height: wp('10%'), borderWidth: wp('0.1%'), borderRadius: wp('1%'), borderColor: '#ddd', paddingHorizontal: 10 }}
-                                placeholder='contoh: Head Office PAS'
-                                value={lokasiKerja}
-                                onChangeText={setLokasiKerja}
-                            />
-                        </View>
-
-                        <View style={{ rowGap: 6 }}>
-                            <Text style={{ fontWeight: 'bold', fontSize: wp('3.5%') }}>Kategori*</Text>
-                            <Dropdown
-                                style={{ height: wp('10%'), borderWidth: wp('0.1%'), borderRadius: wp('1%'), borderColor: '#ddd', paddingHorizontal: 10 }}
-                                placeholderStyle={{ fontSize: wp('3.5%') }}
-                                selectedTextStyle={{ fontSize: wp('3.5%') }}
-                                data={kategoriItems}
-                                maxHeight={300}
-                                labelField="label"
-                                valueField="value"
-                                placeholder="Pilih Kategori"
-                                value={kategori}
-                                onChange={item => {
-                                    setKategori(item.value);
-                                }}
-                                renderItem={renderItem}
-                            />
-                        </View>
-
-                        <View style={{ rowGap: 6 }}>
-                            <Text style={{ fontWeight: 'bold', fontSize: wp('3.5%') }}>Hasil*</Text>
-                            <Dropdown
-                                style={{ height: wp('10%'), borderWidth: wp('0.1%'), borderRadius: wp('1%'), borderColor: '#ddd', paddingHorizontal: 10 }}
-                                placeholderStyle={{ fontSize: wp('3.5%') }}
-                                selectedTextStyle={{ fontSize: wp('3.5%') }}
-                                data={hasilItems}
-                                maxHeight={300}
-                                labelField="label"
-                                valueField="value"
-                                placeholder="Pilih Hasil"
-                                value={hasil}
-                                onChange={item => {
-                                    setHasil(item.value);
-                                }}
-                                renderItem={renderItem}
-                            />
-                        </View>
-
-                        <View style={{ rowGap: 6 }}>
-                            <Text style={{ fontWeight: 'bold', fontSize: wp('3.5%') }}>Uraian Kegiatan*</Text>
-                            <TextInput
-                                style={{ borderWidth: wp('0.1%'), borderRadius: wp('1%'), borderColor: '#ddd', paddingHorizontal: 10, textAlignVertical: 'top', }}
-                                multiline={true}
-                                numberOfLines={8}
-                                placeholder='contoh: Melakukan pendataan'
-                                value={kegiatan}
-                                onChangeText={setKegiatan}
-                            />
-                        </View>
-
-                        <TouchableOpacity onPress={onSimpan} style={{ padding: 10, backgroundColor: '#56C58D', alignItems: 'center', justifyContent: 'center', borderRadius: wp('1%') }}>
-                            <Text style={{ fontWeight: 'bold', color: '#fff' }}>Simpan</Text>
-                        </TouchableOpacity>
+                    <View style={{ rowGap: 6 }}>
+                        <Text style={{ fontWeight: 'bold', fontSize: wp('3.5%') }}>Kategori*</Text>
+                        <Dropdown
+                            style={{ height: wp('10%'), borderWidth: wp('0.1%'), borderRadius: wp('1%'), borderColor: '#ddd', paddingHorizontal: 10 }}
+                            placeholderStyle={{ fontSize: wp('3.5%') }}
+                            selectedTextStyle={{ fontSize: wp('3.5%') }}
+                            data={kategoriItems}
+                            maxHeight={300}
+                            labelField="label"
+                            valueField="value"
+                            placeholder="Pilih Kategori"
+                            value={kategori}
+                            onChange={item => {
+                                setKategori(item.value);
+                            }}
+                            renderItem={renderItem}
+                        />
                     </View>
 
-                    {
+                    <View style={{ rowGap: 6 }}>
+                        <Text style={{ fontWeight: 'bold', fontSize: wp('3.5%') }}>Hasil*</Text>
+                        <Dropdown
+                            style={{ height: wp('10%'), borderWidth: wp('0.1%'), borderRadius: wp('1%'), borderColor: '#ddd', paddingHorizontal: 10 }}
+                            placeholderStyle={{ fontSize: wp('3.5%') }}
+                            selectedTextStyle={{ fontSize: wp('3.5%') }}
+                            data={hasilItems}
+                            maxHeight={300}
+                            labelField="label"
+                            valueField="value"
+                            placeholder="Pilih Hasil"
+                            value={hasil}
+                            onChange={item => {
+                                setHasil(item.value);
+                            }}
+                            renderItem={renderItem}
+                        />
+                    </View>
+
+                    <View style={{ rowGap: 6 }}>
+                        <Text style={{ fontWeight: 'bold', fontSize: wp('3.5%') }}>Uraian Kegiatan*</Text>
+                        <TextInput
+                            style={{ borderWidth: wp('0.1%'), borderRadius: wp('1%'), borderColor: '#ddd', paddingHorizontal: 10, textAlignVertical: 'top', }}
+                            multiline={true}
+                            numberOfLines={8}
+                            placeholder='contoh: Melakukan pendataan'
+                            value={kegiatan}
+                            onChangeText={setKegiatan}
+                        />
+                    </View>
+
+                    <TouchableOpacity onPress={onSimpan} style={{ padding: 10, backgroundColor: '#56C58D', alignItems: 'center', justifyContent: 'center', borderRadius: wp('1%') }}>
+                        <Text style={{ fontWeight: 'bold', color: '#fff' }}>Simpan</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {
+                    isLoading ?
+                        <View style={{ padding: 15, backgroundColor: '#fff', rowGap: 10 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', columnGap: 5 }}>
+                                <Skeleton width={responsiveWidth(5)} height={responsiveWidth(5)} style={{ alignSelf: 'center', marginBottom: 12 }} />
+                                <Skeleton width={responsiveWidth(20)} height={responsiveWidth(5)} style={{ alignSelf: 'center', marginBottom: 12 }} />
+                            </View>
+                            {
+                                [1].map((item, index) => (
+                                    <View key={index} style={{ padding: 15, backgroundColor: '#ebf5f0', borderRadius: wp('1%'), rowGap: 15 }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', columnGap: 10 }}>
+                                                <Skeleton width={responsiveHeight(8)} height={responsiveHeight(8)} borderRadius={radius.round} style={{ alignSelf: 'center', marginBottom: 12 }} />
+                                                <View>
+                                                    <Skeleton width={responsiveWidth(20)} height={responsiveWidth(5)} style={{ alignSelf: 'center', marginBottom: 12 }} />
+                                                    <Skeleton width={responsiveWidth(20)} height={responsiveWidth(5)} style={{ alignSelf: 'center', marginBottom: 12 }} />
+                                                </View>
+                                            </View>
+
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', columnGap: 5 }}>
+                                                <Skeleton width={responsiveWidth(15)} height={responsiveWidth(5)} style={{ alignSelf: 'center', marginBottom: 12 }} />
+                                            </View>
+                                        </View>
+
+                                        <Skeleton height={responsiveHeight(6)} style={{ alignSelf: 'center', marginBottom: 12 }} />
+                                    </View>
+                                ))
+                            }
+                        </View>
+                        :
                         laporanHarian.length !== 0 &&
                         <View style={{ padding: 15, backgroundColor: '#fff', rowGap: 10 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', columnGap: 5 }}>
@@ -267,9 +314,9 @@ const ActivityEdit = () => {
                                 ))
                             }
                         </View>
-                    }
-                </ScrollView>
-            </View>
+                }
+            </ScrollView>
+        </View>
     )
 }
 

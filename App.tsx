@@ -5,10 +5,7 @@
  * @format
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-    View,
-} from 'react-native';
+import React from 'react';
 import { AuthProviders } from './src/providers/AuthProviders';
 import AuthNavigation from './src/navigation/AuthNavigation';
 
